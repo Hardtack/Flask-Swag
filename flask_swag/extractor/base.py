@@ -120,6 +120,7 @@ class Extractor(object):
         return Parameter(
             name=name,
             in_='path',
+            required=True,
             **get_type_base(str)
         )
 
