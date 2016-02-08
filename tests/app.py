@@ -21,7 +21,7 @@ def user_index():
 
 
 @app.route('/users/<int:user_id>')
-def user_read(user_id):
+def user_read(user_id: int):
     """
     Read user's info.
     """
