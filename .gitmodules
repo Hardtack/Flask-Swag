@@ -1,0 +1,4 @@
+[submodule "flask_swag/resources/swagger-ui"]
+	path = flask_swag/resources/swagger-ui
+	url = https://github.com/swagger-api/swagger-ui.git
+	branch = v2.1.4
