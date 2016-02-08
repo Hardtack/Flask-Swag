@@ -1,7 +1,7 @@
 Swag
 ====
 
-:class:`flask_swag.Swag` is plain a
+:class:`flask_swag.Swag` is a plain
 `Flask extension <http://flask.pocoo.org/docs/latest/extensions/>`_.
 
 It provides blueprint that has Swagger-UI & swagger spec json URLs.
