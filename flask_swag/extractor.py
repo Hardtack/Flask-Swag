@@ -19,14 +19,15 @@ from .utils import get_type_base, TYPE_MAP
 _MISSING = object()
 
 CONVERTER_TYPES = {
-	'float': float,
-	'path': str,
-	'any': str,
-	'default': str,
-	'uuid': str,
-	'int': int,
-	'string': str,
+    'float': float,
+    'path': str,
+    'any': str,
+    'default': str,
+    'uuid': str,
+    'int': int,
+    'string': str,
 }
+
 
 def parse_endpoint(endpoint):
     """
@@ -64,7 +65,8 @@ def normalize_indent(docstring):
     return '\n'.join(normalized)
 
 
-WerkzeugConverter = collections.namedtuple('WerkzeugConverter', ['converter', 'args', 'kwargs'])
+WerkzeugConverter = collections.namedtuple(
+    'WerkzeugConverter', ['converter', 'args', 'kwargs'])
 PathAndParams = collections.namedtuple('PathAndParams', ['path', 'params'])
 PathAndPathItem = collections.namedtuple('PathAndPathItem', ['path', 'item'])
 
@@ -77,7 +79,8 @@ class Extractor(object):
     and customize converting method by overriding them.
 
     """
-    def convert_werkzeug_converter(self, name: str, converter: WerkzeugConverter):
+    def convert_werkzeug_converter(self, name: str,
+                                   converter: WerkzeugConverter):
         """Convert werkzeug converter to swagger parameter object."""
         python_type = CONVERTER_TYPES.get(converter.converter, None)
         type_base = get_type_base(python_type)
@@ -97,7 +100,7 @@ class Extractor(object):
                 type_base = get_type_base(available_type)
                 break
         if type_base is None:
-        	return None
+            return None
         return Parameter(name=name, in_="path", **type_base)
 
     def parse_werkzeug_rule(self, rule: str) -> PathAndParams:
@@ -148,7 +151,7 @@ class Extractor(object):
         parameter = signature.parameters.get(name)
         annotation = parameter.annotation
         return self.convert_annotation(name, annotation)
-    
+
     def extract_responses(self, view):
         return {
             'default': Response(
@@ -193,17 +196,20 @@ class Extractor(object):
             **kwargs
         )
 
-    def collect_endpoints(self, app: Flask, blueprint=_MISSING, endpoint=None) -> dict:
+    def collect_endpoints(self, app: Flask, blueprint=_MISSING,
+                          endpoint=None) -> dict:
         """Collect endpoints in rules.
 
-        :param blueprint: name of blueprints to be collected. :const:`None` means
-                          non-blueprint endpoints. It cat either be list or string.
-        :param endpoint: endpoints to be collected. It cat either be list or string.
+        :param blueprint: name of blueprints to be collected. :const:`None`
+                          means non-blueprint endpoints. It cat either be list
+                          or string.
+        :param endpoint: endpoints to be collected. It cat either be list or
+                         string.
 
         """
         if blueprint is not _MISSING:
             if blueprint is None or isinstance(blueprint, str):
-            	blueprint = (blueprint,)
+                blueprint = (blueprint,)
         if isinstance(endpoint, str):
             endpoint = (endpoint,)
 
@@ -223,7 +229,8 @@ class Extractor(object):
                 method_collection[method] = rule.endpoint
         return endpoints
 
-    def make_path_item(self, app: Flask, rule: str, endpoints: dict) -> PathAndPathItem:
+    def make_path_item(self, app: Flask, rule: str, endpoints: dict) \
+            -> PathAndPathItem:
         """Make path item from rule and endpoints collected by HTTP methods."""
         path, params = self.parse_werkzeug_rule(rule)
         operations = {}
@@ -236,15 +243,16 @@ class Extractor(object):
             item=PathItem(**operations),
         )
 
-
     def extract_paths(self, app: Flask, blueprint=_MISSING, endpoint=None):
         """Extract path items from flask app.
 
-        :param blueprint: name of blueprints to be collected. :const:`None` means
-                          non-blueprint endpoints. It cat either be list or string.
-        :param endpoint: endpoints to be collected. It cat either be list or string.
-        """
+        :param blueprint: name of blueprints to be collected. :const:`None`
+                          means non-blueprint endpoints. It cat either be list
+                          or string.
+        :param endpoint: endpoints to be collected. It cat either be list or
+                         string.
 
+        """
         endpoints = self.collect_endpoints(app, blueprint, endpoint)
 
         paths = {}

@@ -20,28 +20,28 @@ from .globals import SWAGGER_UI_DIR
 class Swag(object):
     """
     Flask extension class for flask_swag.
-    
+
     This is plain flask extension. So, you can use it like ::
-    
+
         swag = Swag(app)
-        
+
     and also ::
-    
+
         swag = Swag(app)
-        
+
         # Init later
         swag.init_app(app)
-        
+
     The extension requires following configurations.
 
             *   SWAG_TITLE
-                
+
                 Title for swagger info.
-            
+
             *   SWAG_API_VERSION
-            
+
                 API version info.
-                
+
     Or you can provide `core.Info` instead of them.
 
     """
@@ -53,7 +53,7 @@ class Swag(object):
                           :class:`.extractor.Extractor`
         :param \*args: args to be passed to :meth:`init_app`
         :param \*\*kwargs: kwargs to be passed to :meth:`init_app`
-        
+
         """
         self.app = app
         self.extractor = extractor or Extractor()
@@ -70,7 +70,7 @@ class Swag(object):
         app.generate_swagger = generate_swagger
         self.register_blueprint(app,
                                 blueprint_name=blueprint_name,
-                                   prefix=prefix,
+                                prefix=prefix,
                                 swagger_ui_root=swagger_ui_root)
 
     def generate_swagger(self, app: Flask=current_app, swagger_info=None,
@@ -86,14 +86,14 @@ class Swag(object):
         parsed = urllib.parse.urlparse(request.host_url)
         schemes = [parsed.scheme]
         host = parsed.netloc
-        
+
         # Build kwargs for core.Swagger
         kwargs = {
             'info': swagger_info,
             'host': host,
             'schemes': schemes,
         }
-        
+
         # Update with swagger_fields
         kwargs.update(swagger_fields)
         return core.convert(core.Swagger(
@@ -102,27 +102,27 @@ class Swag(object):
             **kwargs
         ))
 
-    def make_blueprint(self, blueprint_name='swag', 
+    def make_blueprint(self, blueprint_name='swag',
                        swagger_ui_root=SWAGGER_UI_DIR) -> Blueprint:
         """
         Create a new Swagger UI related blueprint.
-        
+
         :param blueprint_name: name of the blueprint. default is `'swag'`
         :param prefix: URL prefix of the blueprint.
-        
+
         """
         blueprint = Blueprint(blueprint_name, __name__)
-        
+
         @blueprint.route('/swagger.json')
         def swagger_json():
             swagger = current_app.generate_swagger()
             return jsonify(swagger)
-        
+
         @blueprint.route('/ui/<path:path>')
         def swagger_ui(path):
             return send_from_directory(swagger_ui_root, path,
                                        cache_timeout=3600)
-        
+
         @blueprint.route('/ui/')
         def swagger_ui_index():
             with open(os.path.join(swagger_ui_root, 'index.html')) as f:
@@ -152,20 +152,20 @@ class Swag(object):
             else:
                 first, rest = components
                 html = first + tag + '</body>' + rest
-            
+
             return html, 200
         return blueprint
 
-    def register_blueprint(self, app: Flask, blueprint_name='swag', prefix='/swagger',
-                           swagger_ui_root=SWAGGER_UI_DIR) \
+    def register_blueprint(self, app: Flask, blueprint_name='swag',
+                           prefix='/swagger', swagger_ui_root=SWAGGER_UI_DIR) \
             -> Blueprint:
         """
         Register Swagger UI related blueprint.
-        
+
         :param blueprint_name: name of the blueprint. default is `'swag'`
         :param prefix: URL prefix of the blueprint.
         :returns: created blueprint
-        
+
         """
         blueprint = self.make_blueprint(blueprint_name, swagger_ui_root)
         app.register_blueprint(blueprint, url_prefix=prefix)
