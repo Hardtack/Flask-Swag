@@ -53,17 +53,6 @@ class Extractor(object):
     You can extract path items from app by using :meth:`extract_paths`
     and customize converting method by overriding them.
 
-    For example, you can add default response to all operations like this ::
-
-        class DefaultExtractor(Extractor):
-            def extract_others(self, view, params: dict, endpoint: str,
-                               path: str, method: str, app: Flask):
-        		return {
-                	'default': Response(
-                    	description="Show something."
-                    )
-                }
-
     """
     def convert_werkzeug_converter(self, name: str, converter: WerkzeugConverter):
         """Convert werkzeug converter to swagger parameter object."""
@@ -136,6 +125,13 @@ class Extractor(object):
         parameter = signature.parameters.get(name)
         annotation = parameter.annotation
         return self.convert_annotation(name, annotation)
+    
+    def extract_responses(self, view):
+        return {
+            'default': Response(
+                description=''
+            ),
+        }
 
     def build_parameters(self, view, param_info) -> list:
         """
@@ -162,6 +158,7 @@ class Extractor(object):
         description = self.extract_description(view)
         summary = self.extract_summary(view)
         parameters = self.build_parameters(view, params)
+        responses = self.extract_responses(view)
         kwargs = self.extract_others(
             view, params, endpoint, path, method, app)
 
@@ -169,6 +166,7 @@ class Extractor(object):
             description=description,
             summary=summary,
             parameters=parameters,
+            responses=responses,
             **kwargs
         )
 
