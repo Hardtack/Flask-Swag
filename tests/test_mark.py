@@ -41,7 +41,7 @@ def test_mark():
         'required': ['name'],
     }
 
-    @app.route('/users/')
+    @app.route('/groups/<int:group_id>/users/')
     @mark.summary("User index.")
     @mark.query('page', int, optional=True)
     @mark.response(200, {'description': "List of users.",
@@ -68,13 +68,39 @@ def test_mark():
         'responses': {
             200: {
                 'description': "List of users.",
-                'schema': user_list_schema
+                'schema': user_list_schema,
             },
         },
     } == mark.get_swag(index)
 
     # Create an extractor
     extractor = MarkExtractor()
+
+    assert {
+        '/groups/{group_id}/users/': {
+            'get': {
+                'summary': "User index.",
+                'description': "Get list of users.",
+                'parameters': [{
+                    'name': 'group_id',
+                    'type': 'integer',
+                    'in_': 'path',
+                    'required': True,
+                }, {
+                    'name': 'page',
+                    'type': 'integer',
+                    'in_': 'query',
+                    'required': False,
+                }],
+                'responses': {
+                    200: {
+                        'description': "List of users.",
+                        'schema': user_list_schema,
+                    },
+                }
+            }
+        }
+    } == extractor.extract_paths(app, endpoint='index')
 
     assert {
         '/users/': {
