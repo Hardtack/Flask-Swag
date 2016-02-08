@@ -5,6 +5,10 @@ Swagger spec extractor for flask.
 
 It supports only python3.4 and higher.
 
+[![PyPI version](https://badge.fury.io/py/Flask-Swag.svg)](https://badge.fury.io/py/Flask-Swag)
+[![Build Status](https://travis-ci.org/Hardtack/Flask-Swag.svg?branch=master)](https://travis-ci.org/Hardtack/Flask-Swag)
+[![Documentation Status](https://readthedocs.org/projects/flask-swag/badge/?version=latest)](http://flask-swag.readthedocs.org/en/latest/?badge=latest)
+
 
 How to use it
 -------------
