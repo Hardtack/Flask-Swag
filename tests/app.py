@@ -3,6 +3,11 @@ from flask import Flask
 
 app = Flask(__name__)
 
+app.config.update({
+    'SWAG_TITLE': 'Flask-Swag test application',
+    'SWAG_API_VERSION': '0.0.1',
+})
+
 
 @app.route('/')
 def main():

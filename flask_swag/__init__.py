@@ -7,9 +7,10 @@ Swagger UI.
 
 """
 import os
+import urllib.parse
 
 from flask import Flask, Blueprint, current_app, jsonify, send_from_directory, \
-    url_for
+    url_for, request
 
 from . import core
 from .extractor import Extractor
@@ -30,6 +31,18 @@ class Swag(object):
         
         # Init later
         swag.init_app(app)
+        
+    The extension requires following configurations.
+
+            *   SWAG_TITLE
+                
+                Title for swagger info.
+            
+            *   SWAG_API_VERSION
+            
+                API version info.
+                
+    Or you can provide `core.Info` instead of them.
 
     """
     def __init__(self, app: Flask=None, extractor: Extractor=None,
@@ -40,6 +53,7 @@ class Swag(object):
                           :class:`.extractor.Extractor`
         :param \*args: args to be passed to :meth:`init_app`
         :param \*\*kwargs: kwargs to be passed to :meth:`init_app`
+        
         """
         self.app = app
         self.extractor = extractor or Extractor()
@@ -47,23 +61,45 @@ class Swag(object):
             self.init_app(app, *args, **kwargs)
 
     def init_app(self, app, blueprint_name='swag', prefix='/swagger',
-                 swagger_ui_root=SWAGGER_UI_DIR):
+                 swagger_ui_root=SWAGGER_UI_DIR, swagger_info=None,
+                 swagger_fields=None):
         """Init flask app for Flask-Swag."""
-        app.swagger = self.generate_swagger(app)
+        def generate_swagger():
+            return self.generate_swagger(
+                app, swagger_info, swagger_fields)
+        app.generate_swagger = generate_swagger
         self.register_blueprint(app,
                                 blueprint_name=blueprint_name,
                                    prefix=prefix,
                                 swagger_ui_root=swagger_ui_root)
 
-    def generate_swagger(self, app: Flask=current_app):
+    def generate_swagger(self, app: Flask=current_app, swagger_info=None,
+                         swagger_fields=None):
         """Generate swagger spec from `app`."""
+        # Normalize args
+        swagger_fields = swagger_fields or {}
+        swagger_info = swagger_info or core.Info(
+            title=app.config['SWAG_TITLE'],
+            version=app.config['SWAG_API_VERSION'],
+        )
+        # Extract info from current request
+        parsed = urllib.parse.urlparse(request.host_url)
+        schemes = [parsed.scheme]
+        host = parsed.netloc
+        
+        # Build kwargs for core.Swagger
+        kwargs = {
+            'info': swagger_info,
+            'host': host,
+            'schemes': schemes,
+        }
+        
+        # Update with swagger_fields
+        kwargs.update(swagger_fields)
         return core.convert(core.Swagger(
             version="2.0",
             paths=self.extractor.extract_paths(app),
-            info=core.Info(
-                title="TODO: Fix me title",
-                version="0.0.1",
-            )
+            **kwargs
         ))
 
     def make_blueprint(self, blueprint_name='swag', 
@@ -79,7 +115,8 @@ class Swag(object):
         
         @blueprint.route('/swagger.json')
         def swagger_json():
-            return jsonify(current_app.swagger)
+            swagger = current_app.generate_swagger()
+            return jsonify(swagger)
         
         @blueprint.route('/ui/<path:path>')
         def swagger_ui(path):
