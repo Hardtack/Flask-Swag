@@ -1,8 +1,8 @@
 """
-extractor
-=========
+extractor.base
+==============
 
-Extract path info from flask application.
+Base & default implmentation class of extractor.
 
 """
 import io
@@ -12,9 +12,9 @@ import collections
 from flask import Flask
 from werkzeug.routing import parse_rule, parse_converter_args
 
-from .core import PathItem, Operation, Parameter, Response
-from .utils import get_type_base, TYPE_MAP, parse_endpoint, normalize_indent, \
-    merge
+from ..core import PathItem, Operation, Parameter, Response
+from ..utils import get_type_base, TYPE_MAP, parse_endpoint, \
+    normalize_indent, merge
 
 _MISSING = object()
 
