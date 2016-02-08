@@ -47,7 +47,13 @@ PathAndPathItem = collections.namedtuple('PathAndPathItem', ['path', 'item'])
 
 
 class Extractor(object):
-
+    """
+    Base class that extract swagger spec from flask application.
+    
+    You can extract path items from app by using :meth:`extract_paths`
+    and customize converting method by overriding them.
+    
+    """
     def convert_werkzeug_converter(self, name: str, converter: WerkzeugConverter):
         """Convert werkzeug converter to swagger parameter object."""
         python_type = CONVERTER_TYPES.get(converter.converter, None)
