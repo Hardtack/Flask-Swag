@@ -6,6 +6,7 @@ Extract path info from flask application.
 
 """
 import io
+import re
 import inspect
 import collections
 
@@ -38,7 +39,29 @@ def parse_endpoint(endpoint):
 
 
 def normalize_indent(docstring):
-    return docstring
+    lines = docstring.split('\n')
+    # Ignore first line
+    first = lines.pop(0)
+    common_indent = None
+    for line in lines:
+        if not line.strip():
+            # Ignore empty lines
+            continue
+        indent = re.match(r'^\s*', line).group()
+        if common_indent is None:
+            common_indent = indent
+        # Find common parts
+        for i in range(len(common_indent) + 1):
+            to = len(common_indent) - i
+            if indent.startswith(common_indent[:to]):
+                common_indent = common_indent[:to]
+                break
+    normalized = []
+    for line in lines:
+        line = line[len(common_indent):]
+        normalized.append(line)
+    normalized.insert(0, first)
+    return '\n'.join(normalized)
 
 
 WerkzeugConverter = collections.namedtuple('WerkzeugConverter', ['converter', 'args', 'kwargs'])
