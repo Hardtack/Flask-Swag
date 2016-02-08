@@ -1,6 +1,6 @@
 import pytest
 
-from flask_swag.core import parameters_from_object_schema, convert, Swagger, \
+from flask_swag.core import parameters_from_object_schema, dump, Swagger, \
     Info, PathItem, Operation, Response, Schema, License
 
 
@@ -73,7 +73,7 @@ def test_dump_swagger():
                 },
             },
         },
-    } == convert(swagger)
+    } == dump(swagger)
 
 
 def test_parameters_from_schema():
@@ -143,7 +143,7 @@ def test_parameters_from_schema():
                 },
             },
         },
-    } == convert(swagger)
+    } == dump(swagger)
 
 
 def test_strict():

@@ -78,9 +78,9 @@ PathItem = make_dict_factory(schemas.PathItemSchema())
 Swagger = make_dict_factory(schemas.SwaggerSchema())
 
 
-def convert(swagger, schema=schemas.SwaggerSchema()):
+def dump(swagger, schema=schemas.SwaggerSchema()):
     """
-    Convert swagger dict to swagger JSON spec
+    Dump swagger dict to swagger JSON spec
     """
     return schema.dump(swagger).data
 

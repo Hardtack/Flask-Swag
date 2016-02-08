@@ -124,7 +124,7 @@ class Swag(object):
 
         # Update with swagger_fields
         kwargs.update(swagger_fields)
-        return core.convert(core.Swagger(**kwargs))
+        return core.dump(core.Swagger(**kwargs))
 
     def make_blueprint(self, blueprint_name='swag',
                        swagger_ui_root=SWAGGER_UI_DIR) -> Blueprint:
