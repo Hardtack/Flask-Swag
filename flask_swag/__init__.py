@@ -10,7 +10,7 @@ import os
 import urllib.parse
 
 from flask import Flask, Blueprint, current_app, jsonify, \
-    send_from_directory, url_for, request
+    send_from_directory, url_for, request, redirect
 
 from . import core
 from .extractor import Extractor, MarkExtractor
@@ -45,6 +45,24 @@ class Swag(object):
 
     Or you can provide `core.Info` instead of them.
 
+    To customize URL for swagger, use following configurations.
+
+        *   SWAG_BLUEPRINT_NAME
+
+            Default is ``'swag'``
+
+        *   SWAG_URL_PREFIX
+
+            Default is ``'/swagger'``
+
+        *   SWAG_JSON_URL
+
+            Default is ``'/swagger.json'``
+
+        *   SWAG_UI_PREFIX
+
+            Default is ``'/ui'``
+
     And you can use another version of swagger-ui using configuration.
 
         *   SWAG_UI_ROOT
@@ -69,18 +87,21 @@ class Swag(object):
         if app is not None:
             self.init_app(app, *args, **kwargs)
 
-    def init_app(self, app, blueprint_name='swag', prefix='/swagger',
-                 swagger_info=None, swagger_fields=None):
+    def init_app(self, app, swagger_info=None, swagger_fields=None):
         """Init flask app for Flask-Swag."""
+        # Default values for configurations
+        app.config.setdefault('SWAG_UI_ROOT', SWAGGER_UI_DIR)
+        app.config.setdefault('SWAG_BLUEPRINT_NAME', 'swag')
+        app.config.setdefault('SWAG_URL_PREFIX', '/swagger')
+        app.config.setdefault('SWAG_JSON_URL', '/swagger.json')
+        app.config.setdefault('SWAG_UI_PREFIX', '/ui')
+
+        # Add generator too app
         def generate_swagger():
-            return self.generate_swagger(
-                app, swagger_info, swagger_fields, blueprint_name)
+            return self.generate_swagger(app, swagger_info, swagger_fields)
         app.generate_swagger = generate_swagger
-        swagger_ui_root = app.config.get('SWAG_UI_ROOT', SWAGGER_UI_DIR)
-        self.register_blueprint(app,
-                                blueprint_name=blueprint_name,
-                                prefix=prefix,
-                                swagger_ui_root=swagger_ui_root)
+
+        self.register_blueprint(app)
 
     def generate_swagger(self, app: Flask=current_app, swagger_info=None,
                          swagger_fields=None, swag_blueprint='swag',
@@ -160,39 +181,45 @@ class Swag(object):
             html = first + tag + '</body>' + rest
         return html
 
-    def make_blueprint(self, blueprint_name='swag',
-                       swagger_ui_root=SWAGGER_UI_DIR) -> Blueprint:
+    def make_blueprint(self, blueprint_name, swagger_ui_root, json_url,
+                       ui_prefix) -> Blueprint:
         """
         Create a new Swagger UI related blueprint.
 
         :param blueprint_name: name of the blueprint. default is `'swag'`
-        :param prefix: URL prefix of the blueprint.
+        :param swagger_ui_root: root path for swagger-ui.
+        :param json_url: swagger spec json URL.
+        :param ui_prefix: prefix URL for swagger-ui
 
         """
         blueprint = Blueprint(blueprint_name, __name__)
 
-        @blueprint.route('/swagger.json')
+        @blueprint.route(json_url)
         def swagger_json():
             swagger = current_app.generate_swagger()
             return jsonify(swagger)
 
-        @blueprint.route('/ui/<path:path>')
+        @blueprint.route('{}/<path:path>'.format(ui_prefix))
         def swagger_ui(path):
             return send_from_directory(swagger_ui_root, path,
                                        cache_timeout=3600)
 
-        @blueprint.route('/ui/')
+        @blueprint.route('{}/'.format(ui_prefix))
         def swagger_ui_index():
             with open(os.path.join(swagger_ui_root, 'index.html')) as f:
                 html = f.read()
             # Inject javascript code
-            url = url_for('{}.{}'.format(blueprint_name, 'swagger_json'))
+            url = url_for('{}.swagger_json'.format(blueprint_name))
             html = self.inject_swagger_url(html, url)
             return html, 200
+
+        @blueprint.route(ui_prefix)
+        def swagger_ui_prefix():
+            return redirect('{}.swagger_ui_index'.format(blueprint_name))
+
         return blueprint
 
-    def register_blueprint(self, app: Flask, blueprint_name='swag',
-                           prefix='/swagger', swagger_ui_root=SWAGGER_UI_DIR) \
+    def register_blueprint(self, app: Flask) \
             -> Blueprint:
         """
         Register Swagger UI related blueprint.
@@ -202,6 +229,14 @@ class Swag(object):
         :returns: created blueprint
 
         """
-        blueprint = self.make_blueprint(blueprint_name, swagger_ui_root)
+        prefix = app.config['SWAG_URL_PREFIX']
+        blueprint_name = app.config['SWAG_BLUEPRINT_NAME']
+        swagger_ui_root = app.config['SWAG_UI_ROOT']
+        json_url = app.config['SWAG_JSON_URL']
+        ui_prefix = app.config['SWAG_UI_PREFIX']
+
+        blueprint = self.make_blueprint(blueprint_name, swagger_ui_root,
+                                        json_url, ui_prefix)
         app.register_blueprint(blueprint, url_prefix=prefix)
+
         return blueprint
