@@ -5,7 +5,9 @@ mark
 Mark flask view with swagger spec.
 
 """
-from . import core
+from marshmallow import Schema as MaSchema
+
+from . import core, ext
 from .utils import merge, normalize_indent, compose, get_type_base
 
 
@@ -141,6 +143,9 @@ class Mark(object):
             def post_read(post_id):
                 ...
 
+        `schema` can be marshmallow's :class:`~marshmallow.Schema` if
+        `marshmallow_jsonschema` is installed.
+
         """
         if isinstance(response_or_description, str):
             description = response_or_description
@@ -153,6 +158,8 @@ class Mark(object):
                 response['headers'] = headers
         else:
             response = response_or_description
+        if isinstance(response.get('schema', None), MaSchema):
+            response['schema'] = ext.dump_marshmallow(response['schema'])
 
         def decorator(fn):
             swag = self.get_swag(fn)
@@ -185,3 +192,11 @@ class Mark(object):
         """Mark simple form parameter."""
         return self.simple_param('formData', name, python_type,
                                  optional=optional)
+
+    def formencode(self, formencode_schema, in_='formData'):
+        """Mark formencode schema as parameter."""
+        self.schema(ext.dump_formencode(formencode_schema), in_=in_)
+
+    def marshmallow(self, formencode_schema, in_='formData'):
+        """Mark marshmallow schema as parameter."""
+        self.schema(ext.dump_marshmallow(formencode_schema), in_=in_)
