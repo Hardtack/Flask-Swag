@@ -11,7 +11,7 @@ import inspect
 from flask import Flask
 from werkzeug.routing import parse_rule
 
-from .core import PathItem, Operation
+from .core import PathItem, Operation, Parameter
 from .utils import get_type_base, TYPE_MAP
 
 
@@ -59,10 +59,23 @@ def view_to_operation(view, params: dict):
         for available_type in TYPE_MAP:
             if issubclass(parameter.annotation, available_type):
                 params[var] = get_type_base(available_type)
+                
+    parameters = []
+    for name, type_base in params.items():
+        if type_base is None:
+            continue
+        kwargs = dict(type_base)
+        kwargs.update(
+            name=name,
+            in_='path',
+            required=True,
+        )
+        parameters.append(Parameter(**kwargs))
 
     return Operation(
         description=description,
         summary=summary,
+        parameters=parameters,
     )
 
 
