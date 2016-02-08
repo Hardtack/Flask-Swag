@@ -155,17 +155,18 @@ class Extractor(object):
         summary = self.extract_summary(view, ctx)
         parameters = self.build_parameters(view, params, ctx)
         responses = self.extract_responses(view, ctx)
-        kwargs = self.extract_others(view, merge(ctx, {
+        others = self.extract_others(view, merge(ctx, {
             'params': params,
         }))
-
-        return Operation(
+        kwargs = dict(
             description=description,
             summary=summary,
             parameters=parameters,
             responses=responses,
-            **kwargs
         )
+        kwargs.update(others)
+
+        return Operation(**kwargs)
 
     def make_path_item(self, app: Flask, rule: str, endpoints: dict,
                        ctx: dict) -> PathAndPathItem:

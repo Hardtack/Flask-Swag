@@ -15,6 +15,7 @@ from flask import Flask, Blueprint, current_app, jsonify, \
 from . import core
 from .extractor import Extractor, MarkExtractor
 from .globals import SWAGGER_UI_DIR
+from .mark import Mark
 
 
 class Swag(object):
@@ -46,17 +47,20 @@ class Swag(object):
 
     """
     def __init__(self, app: Flask=None, extractor: Extractor=None,
-                 *args, **kwargs):
+                 mark: Mark=None, *args, **kwargs):
         """
         :param app: app to be initialized
         :param extractor: extractor instance, default is
                           :class:`.extractor.MarkExtractor`
+        :param extractor: marker instance, default is
+                          :class:`.mark.Mark`
         :param \*args: args to be passed to :meth:`init_app`
         :param \*\*kwargs: kwargs to be passed to :meth:`init_app`
 
         """
         self.app = app
         self.extractor = extractor or MarkExtractor()
+        self.mark = mark or Mark()
         if app is not None:
             self.init_app(app, *args, **kwargs)
 

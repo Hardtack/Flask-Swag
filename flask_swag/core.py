@@ -86,6 +86,7 @@ def convert(swagger, schema=schemas.SwaggerSchema()):
 
 
 def parameters_from_object_schema(schema, in_='formData'):
+    """Convert object schema to parameters."""
     # We can only extract parameters from schema
     if schema['type'] != 'object':
         return []

@@ -129,3 +129,14 @@ def merge(dest, src):
         merged.extend(tail)
         return merged
     return src
+
+
+def compose(last, *fn):
+    """Compose functions."""
+    fn = (last,) + fn
+
+    def composed(*args):
+        for f in reversed(fn):
+            args = (f(*args), )
+        return args[0]
+    return composed

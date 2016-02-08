@@ -5,7 +5,8 @@ mark
 Mark flask view with swagger spec.
 
 """
-from .utils import merge, normalize_indent
+from . import core
+from .utils import merge, normalize_indent, compose, get_type_base
 
 
 class Mark(object):
@@ -63,14 +64,15 @@ class Mark(object):
 
     def update_swag(self, fn, swag):
         self.get_swag(fn).update(swag)
-        return self.get_swag()
+        return self.get_swag(fn)
 
     def merge_swag(self, fn, swag):
-        self.set_swag(merge(self.get_swag(fn), swag))
+        self.set_swag(fn, merge(self.get_swag(fn), swag))
 
     def swag(self, spec):
         def decorator(fn):
             self.update_swag(fn, spec)
+            return fn
         return decorator
 
     def summary(self, summary: str):
@@ -97,3 +99,89 @@ class Mark(object):
         description = normalize_indent(docstring)
         summary = description.split('\n', 1)[0].strip()[:120]
         return self.summary(summary)(fn)
+
+    def parameter(self, parameter):
+        """Mark parameter to view"""
+        def decorator(fn):
+            swag = self.get_swag(fn)
+            swag.setdefault('parameters', []).append(
+                core.Parameter(**parameter))
+            self.set_swag(fn, swag)
+            return fn
+        return decorator
+
+    def schema(self, schema, in_='formData'):
+        """Convert json schema to parameter and mark it to view."""
+        parameters = core.parameters_from_object_schema(schema, in_=in_)
+        return compose(*map(self.parameter, parameters))
+
+    def response(self, status, response_or_description, schema=None,
+                 headers=None):
+        """Mark response field for view to view.
+        There are two ways to use this decorator.
+
+        First, you can pass response object directly ::
+
+            @app.route('/users/<user_id>')
+            @mark.response(200, {
+                'description': "Target user.",
+                'schema': {
+                    'properties': {
+                        'name': {'type': 'string'},
+                    },
+                }
+            })
+            def user_read(user_id):
+                ...
+
+        Or you can pass each field of response. ::
+
+            @app.route('/post/<post_id'>)
+            @mark.response(200, "Target post", post_schema, read_headers)
+            def post_read(post_id):
+                ...
+
+        """
+        if isinstance(response_or_description, str):
+            description = response_or_description
+            response = {
+                'description': description,
+            }
+            if schema is not None:
+                response['schema'] = schema
+            if headers is not None:
+                response['headers'] = headers
+        else:
+            response = response_or_description
+
+        def decorator(fn):
+            swag = self.get_swag(fn)
+            swag.setdefault('responses', {})[status] = core.Response(
+                **response)
+            self.set_swag(fn, swag)
+            return fn
+        return decorator
+
+    def simple_param(self, in_, name, python_type, optional=False):
+        """
+        Mark parameter with python type that can be converted by
+        :func:`~.utils.get_type_base`
+
+        """
+        required = not optional
+        kwargs = (get_type_base(python_type) or {}).copy()
+        kwargs.update(
+            name=name,
+            in_=in_,
+            required=required,
+        )
+        return self.parameter(core.Parameter(**kwargs))
+
+    def query(self, name, python_type, optional=False):
+        """Mark simple query parameter."""
+        return self.simple_param('query', name, python_type, optional=optional)
+
+    def form(self, name, python_type, optional=False):
+        """Mark simple form parameter."""
+        return self.simple_param('formData', name, python_type,
+                                 optional=optional)
