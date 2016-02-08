@@ -26,6 +26,8 @@ swag = Swag(app)
 
 then, Swagger-UI will be served at `/swagger/ui/`
 
+![Screenshot](docs/images/screenshot.png)
+
 You can add details to flask view functions.
 
 ```python
