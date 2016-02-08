@@ -13,7 +13,7 @@ from flask import Flask, Blueprint, current_app, jsonify, \
     send_from_directory, url_for, request
 
 from . import core
-from .extractor import Extractor
+from .extractor import Extractor, MarkExtractor
 from .globals import SWAGGER_UI_DIR
 
 
@@ -50,13 +50,13 @@ class Swag(object):
         """
         :param app: app to be initialized
         :param extractor: extractor instance, default is
-                          :class:`.extractor.Extractor`
+                          :class:`.extractor.MarkExtractor`
         :param \*args: args to be passed to :meth:`init_app`
         :param \*\*kwargs: kwargs to be passed to :meth:`init_app`
 
         """
         self.app = app
-        self.extractor = extractor or Extractor()
+        self.extractor = extractor or MarkExtractor()
         if app is not None:
             self.init_app(app, *args, **kwargs)
 
