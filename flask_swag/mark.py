@@ -169,29 +169,31 @@ class Mark(object):
             return fn
         return decorator
 
-    def simple_param(self, in_, name, python_type, optional=False):
+    def simple_param(self, in_, name, python_type, optional=False, **kwargs):
         """
         Mark parameter with python type that can be converted by
         :func:`~.utils.get_type_base`
 
         """
         required = not optional
-        kwargs = (get_type_base(python_type) or {}).copy()
-        kwargs.update(
+        params = (get_type_base(python_type) or {}).copy()
+        params.update(
             name=name,
             in_=in_,
             required=required,
         )
-        return self.parameter(core.Parameter(**kwargs))
+        params.update(kwargs)
+        return self.parameter(core.Parameter(**params))
 
-    def query(self, name, python_type, optional=False):
+    def query(self, name, python_type, optional=False, **kwargs):
         """Mark simple query parameter."""
-        return self.simple_param('query', name, python_type, optional=optional)
+        return self.simple_param('query', name, python_type, optional=optional,
+                                 **kwargs)
 
-    def form(self, name, python_type, optional=False):
+    def form(self, name, python_type, optional=False, **kwargs):
         """Mark simple form parameter."""
         return self.simple_param('formData', name, python_type,
-                                 optional=optional)
+                                 optional=optional, **kwargs)
 
     def formencode(self, formencode_schema, in_='formData'):
         """Mark formencode schema as parameter."""
