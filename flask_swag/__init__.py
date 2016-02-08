@@ -9,8 +9,8 @@ Swagger UI.
 import os
 import urllib.parse
 
-from flask import Flask, Blueprint, current_app, jsonify, send_from_directory, \
-    url_for, request
+from flask import Flask, Blueprint, current_app, jsonify, \
+    send_from_directory, url_for, request
 
 from . import core
 from .extractor import Extractor
