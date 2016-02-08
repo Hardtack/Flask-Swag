@@ -35,15 +35,20 @@ class Swag(object):
 
     The extension requires following configurations.
 
-            *   SWAG_TITLE
+        *   SWAG_TITLE
 
-                Title for swagger info.
+            Title for swagger info.
 
-            *   SWAG_API_VERSION
+        *   SWAG_API_VERSION
 
-                API version info.
+            API version info.
 
     Or you can provide `core.Info` instead of them.
+
+    And you can use another version of swagger-ui using configuration.
+
+        *   SWAG_UI_ROOT
+
 
     """
     def __init__(self, app: Flask=None, extractor: Extractor=None,
@@ -65,13 +70,13 @@ class Swag(object):
             self.init_app(app, *args, **kwargs)
 
     def init_app(self, app, blueprint_name='swag', prefix='/swagger',
-                 swagger_ui_root=SWAGGER_UI_DIR, swagger_info=None,
-                 swagger_fields=None):
+                 swagger_info=None, swagger_fields=None):
         """Init flask app for Flask-Swag."""
         def generate_swagger():
             return self.generate_swagger(
                 app, swagger_info, swagger_fields, blueprint_name)
         app.generate_swagger = generate_swagger
+        swagger_ui_root = app.config.get('SWAG_UI_ROOT', SWAGGER_UI_DIR)
         self.register_blueprint(app,
                                 blueprint_name=blueprint_name,
                                 prefix=prefix,
