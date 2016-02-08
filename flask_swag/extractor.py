@@ -65,7 +65,7 @@ class Extractor(object):
                 break
         if type_base is None:
             return None
-        return Parameter(name=name, in_="path", **type_base)
+        return Parameter(name=name, in_='path', **type_base)
 
     def parse_werkzeug_rule(self, rule: str, ctx: dict) -> PathAndParams:
         """
@@ -116,6 +116,13 @@ class Extractor(object):
         annotation = parameter.annotation
         return self.convert_annotation(name, annotation, ctx)
 
+    def default_path_param(self, name, ctx: dict):
+        return Parameter(
+            name=name,
+            in_='path',
+            **get_type_base(str)
+        )
+
     def extract_responses(self, view, ctx: dict):
         return {
             'default': Response(
@@ -134,7 +141,7 @@ class Extractor(object):
             if parameter is None:
                 parameter = self.extract_param(view, name, ctx)
             if parameter is None:
-                continue
+                parameter = self.default_path_param(name, ctx)
             parameters.append(parameter)
         return parameters
 
