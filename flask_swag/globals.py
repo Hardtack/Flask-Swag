@@ -14,4 +14,4 @@ ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 RESOURCES_DIR = os.path.join(ROOT_DIR, 'resources')
 
 #: Root directory of swagger-ui
-SWAGGER_UI_DIR = os.path.join(RESOURCES_DIR, 'swagger-ui', 'dist')
+SWAGGER_UI_DIR = os.path.join(RESOURCES_DIR, 'swagger-ui')
