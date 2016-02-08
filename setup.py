@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Flask-Swag',
-    version='0.1.0',
+    version='0.1.1-dev',
     description='Build swagger spec with Flask.',
     author='Choi Geonu',
     author_email='6566gun@gmail.com',
