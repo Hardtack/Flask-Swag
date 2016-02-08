@@ -3,6 +3,8 @@ Quick Start
 
 This page is best point to getting started.
 
+You can find out source code from https://github.com/hardtack/flask-swag
+
 
 Configuring
 -----------
@@ -28,5 +30,7 @@ Swagger-UI
 ----------
 
 By default, you may find out Swagger-UI on ``/swagger/ui/`` provided by blueprint.
+
+.. image:: images/screenshot.png
 
 You can customize Swagger-UI by configuring ``'SWAG_UI_ROOT'``
