@@ -1,8 +1,15 @@
+import os
 from setuptools import setup, find_packages
+
+version = {}
+with open(os.path.join(os.path.dirname(__file__),
+                       'flask_swag', 'version.py')) as f:
+    exec(f.read(), version)
+
 
 setup(
     name='Flask-Swag',
-    version='0.1.1-dev',
+    version=version['VERSION'],
     description='Build swagger spec with Flask.',
     author='Choi Geonu',
     author_email='6566gun@gmail.com',

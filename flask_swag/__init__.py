@@ -16,6 +16,10 @@ from . import core
 from .extractor import Extractor, MarkExtractor
 from .globals import SWAGGER_UI_DIR
 from .mark import Mark
+from .version import VERSION
+
+
+__version__ = VERSION
 
 
 class Swag(object):
