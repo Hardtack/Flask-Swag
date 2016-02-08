@@ -23,6 +23,8 @@ User's Guide
    quickstart
    configurations
    core
+   extractor
+
 
 API References
 --------------
@@ -37,4 +39,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
