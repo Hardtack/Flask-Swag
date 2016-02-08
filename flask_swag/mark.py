@@ -197,8 +197,8 @@ class Mark(object):
 
     def formencode(self, formencode_schema, in_='formData'):
         """Mark formencode schema as parameter."""
-        self.schema(ext.dump_formencode(formencode_schema), in_=in_)
+        return self.schema(ext.dump_formencode(formencode_schema), in_=in_)
 
     def marshmallow(self, formencode_schema, in_='formData'):
         """Mark marshmallow schema as parameter."""
-        self.schema(ext.dump_marshmallow(formencode_schema), in_=in_)
+        return self.schema(ext.dump_marshmallow(formencode_schema), in_=in_)
