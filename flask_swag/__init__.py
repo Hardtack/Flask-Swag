@@ -66,7 +66,7 @@ class Swag(object):
         """Init flask app for Flask-Swag."""
         def generate_swagger():
             return self.generate_swagger(
-                app, swagger_info, swagger_fields)
+                app, swagger_info, swagger_fields, blueprint_name)
         app.generate_swagger = generate_swagger
         self.register_blueprint(app,
                                 blueprint_name=blueprint_name,
@@ -74,7 +74,7 @@ class Swag(object):
                                 swagger_ui_root=swagger_ui_root)
 
     def generate_swagger(self, app: Flask=current_app, swagger_info=None,
-                         swagger_fields=None):
+                         swagger_fields=None, swag_blueprint='swag'):
         """Generate swagger spec from `app`."""
         # Normalize args
         swagger_fields = swagger_fields or {}
@@ -98,7 +98,8 @@ class Swag(object):
         kwargs.update(swagger_fields)
         return core.convert(core.Swagger(
             version="2.0",
-            paths=self.extractor.extract_paths(app),
+            paths=self.extractor.extract_paths(
+                app, exclude_blueprint=swag_blueprint),
             **kwargs
         ))
 
