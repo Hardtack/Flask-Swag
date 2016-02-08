@@ -6,7 +6,10 @@ Flask extension that extracts swagger spec from flask app & provides
 Swagger UI.
 
 """
-from flask import Flask, Blueprint, current_app, jsonify, send_from_directory
+import os
+
+from flask import Flask, Blueprint, current_app, jsonify, send_from_directory, \
+    url_for
 
 from . import core
 from .extractor import Extractor
@@ -49,7 +52,7 @@ class Swag(object):
         app.swagger = self.generate_swagger(app)
         self.register_blueprint(app,
                                 blueprint_name=blueprint_name,
-                               	prefix=prefix,
+                                   prefix=prefix,
                                 swagger_ui_root=swagger_ui_root)
 
     def generate_swagger(self, app: Flask=current_app):
@@ -85,8 +88,35 @@ class Swag(object):
         
         @blueprint.route('/ui/')
         def swagger_ui_index():
-            return send_from_directory(swagger_ui_root, 'index.html',
-                                       cache_timeout=3600)
+            with open(os.path.join(swagger_ui_root, 'index.html')) as f:
+                content = f.read()
+            # Inject javascript code
+            url = url_for('{}.{}'.format(blueprint_name, 'swagger_json'))
+            js = """
+                  $(function() {{
+                    window.swaggerUi.updateSwaggerUi({{
+                        url: '{url}',
+                         apiKey: ''
+                    }});
+                }});
+            """.format(url=url)
+            tag = '<script type="text/javascript">{js}</script>'.format(
+                js=js
+            )
+            components = content.rsplit('</body>', 1)
+            if len(components) == 1:
+                content, = components
+                components = content.rsplit('</html>', 1)
+                if len(components) == 1:
+                    html = content + tag
+                else:
+                    first, rest = components
+                    html = first + tag + '</html>' + rest
+            else:
+                first, rest = components
+                html = first + tag + '</body>' + rest
+            
+            return html, 200
         return blueprint
 
     def register_blueprint(self, app: Flask, blueprint_name='swag', prefix='/swagger',
