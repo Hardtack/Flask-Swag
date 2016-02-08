@@ -5,7 +5,7 @@ tests.test_extractor
 Tests for mark.
 
 """
-from flask import Flask, Blueprint
+from flask import Flask
 
 from flask_swag.extractor import MarkExtractor
 from flask_swag.mark import Mark
