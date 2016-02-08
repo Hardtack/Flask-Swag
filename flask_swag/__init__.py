@@ -131,6 +131,35 @@ class Swag(object):
         kwargs.update(swagger_fields)
         return core.dump(core.Swagger(**kwargs))
 
+    def inject_swagger_url(self, html, url):
+        """
+        Change default swagger URL by injecting javascript code into html.
+        """
+        js = """
+              $(function() {{
+                window.swaggerUi.updateSwaggerUi({{
+                    url: '{url}',
+                    apiKey: ''
+                }});
+            }});
+        """.format(url=url)
+        tag = '<script type="text/javascript">{js}</script>'.format(
+            js=js
+        )
+        components = html.rsplit('</body>', 1)
+        if len(components) == 1:
+            html, = components
+            components = html.rsplit('</html>', 1)
+            if len(components) == 1:
+                html = html + tag
+            else:
+                first, rest = components
+                html = first + tag + '</html>' + rest
+        else:
+            first, rest = components
+            html = first + tag + '</body>' + rest
+        return html
+
     def make_blueprint(self, blueprint_name='swag',
                        swagger_ui_root=SWAGGER_UI_DIR) -> Blueprint:
         """
@@ -155,33 +184,10 @@ class Swag(object):
         @blueprint.route('/ui/')
         def swagger_ui_index():
             with open(os.path.join(swagger_ui_root, 'index.html')) as f:
-                content = f.read()
+                html = f.read()
             # Inject javascript code
             url = url_for('{}.{}'.format(blueprint_name, 'swagger_json'))
-            js = """
-                  $(function() {{
-                    window.swaggerUi.updateSwaggerUi({{
-                        url: '{url}',
-                         apiKey: ''
-                    }});
-                }});
-            """.format(url=url)
-            tag = '<script type="text/javascript">{js}</script>'.format(
-                js=js
-            )
-            components = content.rsplit('</body>', 1)
-            if len(components) == 1:
-                content, = components
-                components = content.rsplit('</html>', 1)
-                if len(components) == 1:
-                    html = content + tag
-                else:
-                    first, rest = components
-                    html = first + tag + '</html>' + rest
-            else:
-                first, rest = components
-                html = first + tag + '</body>' + rest
-
+            html = self.inject_swagger_url(html, url)
             return html, 200
         return blueprint
 
