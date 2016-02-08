@@ -15,6 +15,8 @@ from werkzeug.routing import parse_rule, parse_converter_args
 from .core import PathItem, Operation, Parameter, Response
 from .utils import get_type_base, TYPE_MAP
 
+_MISSING = object()
+
 CONVERTER_TYPES = {
 	'float': float,
 	'path': str,
@@ -25,10 +27,14 @@ CONVERTER_TYPES = {
 	'string': str,
 }
 
-def get_blueprint_name(endpoint):
+def parse_endpoint(endpoint):
+    """
+    Parse endpoint into (blueprint, endpoint).
+    blueprint can be :const:`None`
+    """
     if '.' in endpoint:
-        return endpoint.split('.', 1)[0]
-    return None
+        return endpoint.split('.', 1)
+    return None, endpoint
 
 
 def normalize_indent(docstring):
@@ -37,6 +43,7 @@ def normalize_indent(docstring):
 
 WerkzeugConverter = collections.namedtuple('WerkzeugConverter', ['converter', 'args', 'kwargs'])
 PathAndParams = collections.namedtuple('PathAndParams', ['path', 'params'])
+PathAndPathItem = collections.namedtuple('PathAndPathItem', ['path', 'item'])
 
 
 class Extractor(object):
@@ -152,28 +159,61 @@ class Extractor(object):
             responses=responses,
         )
 
-    def extract_paths(self, app: Flask, endpoint=None, blueprint=None, from_docstring=True):
-        rules = app.url_map.iter_rules(endpoint)
+    def collect_endpoints(self, app: Flask, blueprint=_MISSING, endpoint=None) -> dict:
+        """Collect endpoints in rules.
 
-        # Collect endpoints from rules
+        :param blueprint: name of blueprints to be collected. :const:`None` means
+                          non-blueprint endpoints. It cat either be list or string.
+        :param endpoint: endpoints to be collected. It cat either be list or string.
+
+        """
+        if blueprint is not _MISSING:
+            if blueprint is None or isinstance(blueprint, str):
+            	blueprint = (blueprint,)
+        if isinstance(endpoint, str):
+            endpoint = (endpoint,)
+
         endpoints = {}
-        for rule in rules:
-            path = rule.rule
-            endpoint = rule.endpoint
-            if blueprint and blueprint != get_blueprint_name(endpoint):
+        for rule in app.url_map.iter_rules():
+            if blueprint is not _MISSING:
+                rule_blueprint, rule_endpoint = parse_endpoint(rule.endpoint)
+                if rule_blueprint not in blueprint:
+                    continue
+                if endpoint and rule_endpoint not in endpoint:
+                    continue
+            elif endpoint and rule.endpoint not in endpoint:
                 continue
             methods = rule.methods.difference({'HEAD', 'OPTIONS'})
-            collection = endpoints.setdefault(path, {})
+            method_collection = endpoints.setdefault(rule.rule, {})
             for method in methods:
-                collection[method] = endpoint
+                method_collection[method] = rule.endpoint
+        return endpoints
+
+    def make_path_item(self, app: Flask, rule: str, endpoints: dict) -> PathAndPathItem:
+        """Make path item from rule and endpoints collected by HTTP methods."""
+        path, params = self.parse_werkzeug_rule(rule)
+        operations = {}
+        for method, endpoint in endpoints.items():
+            view = app.view_functions[endpoint]
+            operations[method.lower()] = self.view_to_operation(view, params)
+        return PathAndPathItem(
+            path=path,
+            item=PathItem(**operations),
+        )
+
+
+    def extract_paths(self, app: Flask, blueprint=_MISSING, endpoint=None):
+        """Extract path items from flask app.
+
+        :param blueprint: name of blueprints to be collected. :const:`None` means
+                          non-blueprint endpoints. It cat either be list or string.
+        :param endpoint: endpoints to be collected. It cat either be list or string.
+        """
+
+        endpoints = self.collect_endpoints(app, blueprint, endpoint)
 
         paths = {}
-        for rule, collection in endpoints.items():
-            path, params = self.parse_werkzeug_rule(rule)
-            operations = {}
-            for method, endpoint in collection.items():
-                view = app.view_functions[endpoint]
-                operations[method.lower()] = self.view_to_operation(view, params)
-            pathitem = PathItem(**operations)
-            paths[path] = pathitem
+        for rule, methods in endpoints.items():
+            path, path_item = self.make_path_item(app, rule, methods)
+            paths[path] = path_item
         return paths
