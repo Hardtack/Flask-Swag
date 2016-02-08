@@ -21,8 +21,8 @@ class Mark(object):
 
         @app.route('/users/')
         @mark({
-            'summary': "List users."
-            'produces': ['application/json']
+            'summary': "List users.",
+            'produces': ['application/json'],
         })
         def index():
             return jsonify(get_users())
@@ -138,7 +138,7 @@ class Mark(object):
 
         Or you can pass each field of response. ::
 
-            @app.route('/post/<post_id'>)
+            @app.route('/post/<post_id>')
             @mark.response(200, "Target post", post_schema, read_headers)
             def post_read(post_id):
                 ...

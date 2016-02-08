@@ -24,6 +24,8 @@ User's Guide
    configurations
    core
    extractor
+   mark
+   swag
 
 
 API References
