@@ -6,7 +6,6 @@ Extract path info from flask application.
 
 """
 import io
-import re
 import inspect
 import collections
 
@@ -14,7 +13,8 @@ from flask import Flask
 from werkzeug.routing import parse_rule, parse_converter_args
 
 from .core import PathItem, Operation, Parameter, Response
-from .utils import get_type_base, TYPE_MAP
+from .utils import get_type_base, TYPE_MAP, parse_endpoint, normalize_indent, \
+    merge
 
 _MISSING = object()
 
@@ -27,42 +27,6 @@ CONVERTER_TYPES = {
     'int': int,
     'string': str,
 }
-
-
-def parse_endpoint(endpoint):
-    """
-    Parse endpoint into (blueprint, endpoint).
-    blueprint can be :const:`None`
-    """
-    if '.' in endpoint:
-        return endpoint.split('.', 1)
-    return None, endpoint
-
-
-def normalize_indent(docstring):
-    lines = docstring.split('\n')
-    # Ignore first line
-    first = lines.pop(0)
-    common_indent = None
-    for line in lines:
-        if not line.strip():
-            # Ignore empty lines
-            continue
-        indent = re.match(r'^\s*', line).group()
-        if common_indent is None:
-            common_indent = indent
-        # Find common parts
-        for i in range(len(common_indent) + 1):
-            to = len(common_indent) - i
-            if indent.startswith(common_indent[:to]):
-                common_indent = common_indent[:to]
-                break
-    normalized = []
-    for line in lines:
-        line = line[len(common_indent):]
-        normalized.append(line)
-    normalized.insert(0, first)
-    return '\n'.join(normalized)
 
 
 WerkzeugConverter = collections.namedtuple(
