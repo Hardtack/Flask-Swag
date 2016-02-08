@@ -24,6 +24,12 @@ User's Guide
    configurations
    core
 
+API References
+--------------
+
+
+*  :doc:`api/modules`
+
 
 Indices and tables
 ==================
