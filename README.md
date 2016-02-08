@@ -40,4 +40,4 @@ def some_list():
 Documentation
 -------------
 
-You can find out more info at http://some-link-here
+You can find out more info at http://flask-swag.readthedocs.org/
