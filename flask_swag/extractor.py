@@ -44,7 +44,7 @@ class Extractor(object):
 
     """
     def convert_werkzeug_converter(self, name: str,
-                                   converter: WerkzeugConverter):
+                                   converter: WerkzeugConverter, ctx: dict):
         """Convert werkzeug converter to swagger parameter object."""
         python_type = CONVERTER_TYPES.get(converter.converter, None)
         type_base = get_type_base(python_type)
@@ -52,7 +52,7 @@ class Extractor(object):
             return None
         return Parameter(name=name, in_="path", required=True, **type_base)
 
-    def convert_annotation(self, name, annotation):
+    def convert_annotation(self, name, annotation, ctx: dict):
         """Convert function annotation to swagger parameter object."""
         if annotation is None:
             return None
@@ -67,7 +67,7 @@ class Extractor(object):
             return None
         return Parameter(name=name, in_="path", **type_base)
 
-    def parse_werkzeug_rule(self, rule: str) -> PathAndParams:
+    def parse_werkzeug_rule(self, rule: str, ctx: dict) -> PathAndParams:
         """
         Convert werkzeug rule to swagger path format and
         extract parameter info.
@@ -93,64 +93,64 @@ class Extractor(object):
                     buf.write(variable)
             return PathAndParams(buf.getvalue(), params)
 
-    def extract_description(self, view) -> str:
+    def extract_description(self, view, ctx: dict) -> str:
         """Extract description info from view function."""
         doc = getattr(view, '__doc__', None) or None
         if not doc:
             return None
         return normalize_indent(doc)
 
-    def extract_summary(self, view) -> str:
+    def extract_summary(self, view, ctx) -> str:
         """Extract brief description from view function."""
-        description = self.extract_description(view)
+        description = self.extract_description(view, ctx)
         if not description:
             return None
         return description.strip().split('\n', 1)[0][:120].strip()
 
-    def extract_param(self, view, name):
+    def extract_param(self, view, name, ctx: dict):
         """Extract path parameters info from view function."""
         signature = inspect.signature(view)
         if name not in signature.parameters:
             return None
         parameter = signature.parameters.get(name)
         annotation = parameter.annotation
-        return self.convert_annotation(name, annotation)
+        return self.convert_annotation(name, annotation, ctx)
 
-    def extract_responses(self, view):
+    def extract_responses(self, view, ctx: dict):
         return {
             'default': Response(
                 description=''
             ),
         }
 
-    def build_parameters(self, view, param_info) -> list:
+    def build_parameters(self, view, param_info, ctx: dict) -> list:
         """
         Build parameters from path params and view params.
         path params have higher order.
         """
         parameters = []
         for name, converter in param_info.items():
-            parameter = self.convert_werkzeug_converter(name, converter)
+            parameter = self.convert_werkzeug_converter(name, converter, ctx)
             if parameter is None:
-                parameter = self.extract_param(view, name)
+                parameter = self.extract_param(view, name, ctx)
             if parameter is None:
                 continue
             parameters.append(parameter)
         return parameters
 
-    def extract_others(self, view, params: dict, endpoint: str,
-                       path: str, method: str, app: Flask):
+    def extract_others(self, view, ctx: dict):
+        """Extract other fields from view & context."""
         return {}
 
-    def make_operation(self, view, params: dict, endpoint: str,
-                       path: str, method: str, app: Flask):
+    def make_operation(self, view, params: dict, ctx: dict):
         """Convert view to swagger opration object."""
-        description = self.extract_description(view)
-        summary = self.extract_summary(view)
-        parameters = self.build_parameters(view, params)
-        responses = self.extract_responses(view)
-        kwargs = self.extract_others(
-            view, params, endpoint, path, method, app)
+        description = self.extract_description(view, ctx)
+        summary = self.extract_summary(view, ctx)
+        parameters = self.build_parameters(view, params, ctx)
+        responses = self.extract_responses(view, ctx)
+        kwargs = self.extract_others(view, merge(ctx, {
+            'params': params,
+        }))
 
         return Operation(
             description=description,
@@ -158,6 +158,24 @@ class Extractor(object):
             parameters=parameters,
             responses=responses,
             **kwargs
+        )
+
+    def make_path_item(self, app: Flask, rule: str, endpoints: dict,
+                       ctx: dict) -> PathAndPathItem:
+        """Make path item from rule and endpoints collected by HTTP methods."""
+        path, params = self.parse_werkzeug_rule(rule, ctx)
+        operations = {}
+        for method, endpoint in endpoints.items():
+            view = app.view_functions[endpoint]
+            operations[method.lower()] = self.make_operation(
+                view, params, merge(ctx, {
+                    'endpoint': endpoint,
+                    'path': path,
+                    'method': method,
+                }))
+        return PathAndPathItem(
+            path=path,
+            item=PathItem(**operations),
         )
 
     def collect_endpoints(self, app: Flask, blueprint=_MISSING,
@@ -193,20 +211,6 @@ class Extractor(object):
                 method_collection[method] = rule.endpoint
         return endpoints
 
-    def make_path_item(self, app: Flask, rule: str, endpoints: dict) \
-            -> PathAndPathItem:
-        """Make path item from rule and endpoints collected by HTTP methods."""
-        path, params = self.parse_werkzeug_rule(rule)
-        operations = {}
-        for method, endpoint in endpoints.items():
-            view = app.view_functions[endpoint]
-            operations[method.lower()] = self.make_operation(
-                view, params, endpoint, path, method, app)
-        return PathAndPathItem(
-            path=path,
-            item=PathItem(**operations),
-        )
-
     def extract_paths(self, app: Flask, blueprint=_MISSING, endpoint=None):
         """Extract path items from flask app.
 
@@ -221,6 +225,11 @@ class Extractor(object):
 
         paths = {}
         for rule, methods in endpoints.items():
-            path, path_item = self.make_path_item(app, rule, methods)
+            ctx = {
+                'rule': rule,
+                'methods': methods,
+                'app': app,
+            }
+            path, path_item = self.make_path_item(app, rule, methods, ctx)
             paths[path] = path_item
         return paths
