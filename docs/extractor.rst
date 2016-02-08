@@ -72,3 +72,12 @@ You can customize extractor by subclassing :class:`~flask_swag.extractor.base.Ex
 :meth:`~flask_swag.extractor.base.Extractor.extract_others` will be best point to override.
 
 :class:`flask_swag.extractor.mark.MarkExtractor` is simple example for customization.
+
+
+:class:`~flask_swag.extractor.mark.MarkExtractor`
+-------------------------------------------------
+
+Mark extractor extracts extra swagger specs from view functions.
+This is the default extractor of :class:`flask_swag.Swag`.
+
+This will be useful when you want to write parameter info to view functions.
