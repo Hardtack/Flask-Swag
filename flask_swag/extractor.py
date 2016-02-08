@@ -49,10 +49,21 @@ PathAndPathItem = collections.namedtuple('PathAndPathItem', ['path', 'item'])
 class Extractor(object):
     """
     Base class that extract swagger spec from flask application.
-    
+
     You can extract path items from app by using :meth:`extract_paths`
     and customize converting method by overriding them.
-    
+
+    For example, you can add default response to all operations like this ::
+
+        class DefaultExtractor(Extractor):
+            def extract_others(self, view, params: dict, endpoint: str,
+                               path: str, method: str, app: Flask):
+        		return {
+                	'default': Response(
+                    	description="Show something."
+                    )
+                }
+
     """
     def convert_werkzeug_converter(self, name: str, converter: WerkzeugConverter):
         """Convert werkzeug converter to swagger parameter object."""
@@ -103,12 +114,6 @@ class Extractor(object):
                     buf.write(variable)
             return PathAndParams(buf.getvalue(), params)
 
-
-    def default_response(self):
-        return Response(
-            description="Not documented yet.",
-        )
-
     def extract_description(self, view) -> str:
         """Extract description info from view function."""
         doc = getattr(view, '__doc__', None) or None
@@ -147,22 +152,24 @@ class Extractor(object):
             parameters.append(parameter)
         return parameters
 
-    def view_to_operation(self, view, params: dict):
+    def extract_others(self, view, params: dict, endpoint: str,
+                       path: str, method: str, app: Flask):
+        return {}
+
+    def make_operation(self, view, params: dict, endpoint: str,
+                       path: str, method: str, app: Flask):
         """Convert view to swagger opration object."""
         description = self.extract_description(view)
         summary = self.extract_summary(view)
-        responses = {}
         parameters = self.build_parameters(view, params)
-
-        # Set default response
-        if not responses:
-            responses['default'] = self.default_response()
+        kwargs = self.extract_others(
+            view, params, endpoint, path, method, app)
 
         return Operation(
             description=description,
             summary=summary,
             parameters=parameters,
-            responses=responses,
+            **kwargs
         )
 
     def collect_endpoints(self, app: Flask, blueprint=_MISSING, endpoint=None) -> dict:
@@ -201,7 +208,8 @@ class Extractor(object):
         operations = {}
         for method, endpoint in endpoints.items():
             view = app.view_functions[endpoint]
-            operations[method.lower()] = self.view_to_operation(view, params)
+            operations[method.lower()] = self.make_operation(
+                view, params, endpoint, path, method, app)
         return PathAndPathItem(
             path=path,
             item=PathItem(**operations),
