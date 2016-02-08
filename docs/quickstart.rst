@@ -62,7 +62,7 @@ or for complex operations, you can set operation's fields directly
 
     @app.route('/users/<int:user_id>')
     @swag.mark({
-        'description': "Read user's info."
+        'description': "Read user's info.",
         'responses': {
             200: {
                 'description': "User object."
