@@ -64,8 +64,7 @@ def test_extractor():
                     {
                         'name': 'user_id',
                         'in_': 'path',
-                        'type': 'number',
-                        'format': 'integer',
+                        'type': 'integer',
                         'required': True,
                     },
                 ],
@@ -78,8 +77,7 @@ def test_extractor():
                     {
                         'name': 'user_id',
                         'in_': 'path',
-                        'type': 'number',
-                        'format': 'integer',
+                        'type': 'integer',
                         'required': True,
                     },
                 ],
@@ -147,8 +145,7 @@ def test_blueprint():
                     {
                         'name': 'user_id',
                         'in_': 'path',
-                        'type': 'number',
-                        'format': 'integer',
+                        'type': 'integer',
                         'required': True,
                     },
                 ],
@@ -186,8 +183,7 @@ def test_blueprint():
                     {
                         'name': 'user_id',
                         'in_': 'path',
-                        'type': 'number',
-                        'format': 'integer',
+                        'type': 'integer',
                         'required': True,
                     },
                 ],

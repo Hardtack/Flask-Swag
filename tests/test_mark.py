@@ -61,8 +61,7 @@ def test_mark():
         'summary': "User index.",
         'parameters': [{
             'name': 'page',
-            'type': 'number',
-            'format': 'integer',
+            'type': 'integer',
             'in_': 'query',
             'required': False,
         }],
