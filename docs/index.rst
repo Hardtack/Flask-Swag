@@ -21,7 +21,8 @@ User's Guide
    :maxdepth: 2
 
    quickstart
-
+   configurations
+   core
 
 
 Indices and tables
