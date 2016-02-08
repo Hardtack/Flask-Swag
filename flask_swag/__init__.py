@@ -74,8 +74,23 @@ class Swag(object):
                                 swagger_ui_root=swagger_ui_root)
 
     def generate_swagger(self, app: Flask=current_app, swagger_info=None,
-                         swagger_fields=None, swag_blueprint='swag'):
-        """Generate swagger spec from `app`."""
+                         swagger_fields=None, swag_blueprint='swag',
+                         extractor_kwargs=None):
+        """
+        Generate swagger spec from `app`.
+
+        :param app: the flask app.
+
+        :param swagger_info: `info` field in swagger root object.
+
+        :param swagger_fields: extra fields in swagger root object.
+
+        :param swag_blueprint: the name of Flask-Swag blueprint
+
+        :extractor_kwargs: kwargs to be passed to extractor's
+                           :meth:`extract_paths`
+
+        """
         # Normalize args
         swagger_fields = swagger_fields or {}
         swagger_info = swagger_info or core.Info(
@@ -87,21 +102,25 @@ class Swag(object):
         schemes = [parsed.scheme]
         host = parsed.netloc
 
+        # Extract paths from app
+        ex_kwargs = {
+            'exclude_blueprint': swag_blueprint,
+        }
+        ex_kwargs.update(extractor_kwargs or {})
+        paths = self.extractor.extract_paths(app, **ex_kwargs)
+
         # Build kwargs for core.Swagger
         kwargs = {
             'info': swagger_info,
             'host': host,
             'schemes': schemes,
+            'version': "2.0",
+            'paths': paths,
         }
 
         # Update with swagger_fields
         kwargs.update(swagger_fields)
-        return core.convert(core.Swagger(
-            version="2.0",
-            paths=self.extractor.extract_paths(
-                app, exclude_blueprint=swag_blueprint),
-            **kwargs
-        ))
+        return core.convert(core.Swagger(**kwargs))
 
     def make_blueprint(self, blueprint_name='swag',
                        swagger_ui_root=SWAGGER_UI_DIR) -> Blueprint:
