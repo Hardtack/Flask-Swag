@@ -11,7 +11,7 @@ import inspect
 from flask import Flask
 from werkzeug.routing import parse_rule
 
-from .core import PathItem, Operation, Parameter
+from .core import PathItem, Operation, Parameter, Response
 from .utils import get_type_base, TYPE_MAP
 
 
@@ -45,11 +45,20 @@ def normalize_indent(docstring):
     return docstring
 
 
+def default_response():
+    return Response(
+        description="Not documented yet.",
+    )
+
+
 def view_to_operation(view, params: dict):
     description = view.__doc__ or ''
     summary = description.strip().split('\n')[0][:120]
     signature = inspect.signature(view)
+    responses = {}
+    parameters = []
 	
+    # Extract type info
     for var, converter_type in list(params.items()):
         if converter_type is not None:
             continue
@@ -60,7 +69,6 @@ def view_to_operation(view, params: dict):
             if issubclass(parameter.annotation, available_type):
                 params[var] = get_type_base(available_type)
                 
-    parameters = []
     for name, type_base in params.items():
         if type_base is None:
             continue
@@ -72,10 +80,15 @@ def view_to_operation(view, params: dict):
         )
         parameters.append(Parameter(**kwargs))
 
+    # Set default response
+    if not responses:
+        responses['default'] = default_response()
+
     return Operation(
         description=description,
         summary=summary,
         parameters=parameters,
+        responses=responses,
     )
 
 
