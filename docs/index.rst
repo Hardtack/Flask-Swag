@@ -31,8 +31,10 @@ User's Guide
 API References
 --------------
 
+.. toctree::
+   :maxdepth: 3
 
-*  :doc:`api/modules`
+   api/modules
 
 
 Indices and tables
