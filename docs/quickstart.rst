@@ -89,3 +89,14 @@ You can mark parameters from formencode.
     @swag.formencode(UserCreateSchema())
     def user_create():
         ...
+
+And you can set resposne's schema from marshmallow.
+
+.. code-block:: python
+
+    from .marshmallow_schemas import UserSchema
+
+    @app.route('/users/<int:user_id')
+    @swag.response(200, "User's info", UserSchema())
+    def user_read(user_id):
+        ...
