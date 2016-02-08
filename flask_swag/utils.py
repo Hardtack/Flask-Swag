@@ -52,8 +52,7 @@ TYPE_MAP = {
         'format': 'float',
     },
     int: {
-        'type': 'number',
-        'format': 'integer',
+        'type': 'integer',
     },
     bool: {
         'type': 'boolean',
