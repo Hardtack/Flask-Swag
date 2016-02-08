@@ -178,8 +178,9 @@ class Extractor(object):
             item=PathItem(**operations),
         )
 
-    def collect_endpoints(self, app: Flask, blueprint=_MISSING,
-                          endpoint=None) -> dict:
+    def collect_endpoints(self, app: Flask, blueprint=_MISSING, endpoint=None,
+                          exclude_blueprint=_MISSING, exclude_endpoint=None) \
+            -> dict:
         """Collect endpoints in rules.
 
         :param blueprint: name of blueprints to be collected. :const:`None`
@@ -188,12 +189,22 @@ class Extractor(object):
         :param endpoint: endpoints to be collected. It cat either be list or
                          string.
 
+        :param exclude_blueprint: blueprints not to be collected.
+
+        :param exclude_endpoint: endpoint not to be collected.
+
         """
         if blueprint is not _MISSING:
             if blueprint is None or isinstance(blueprint, str):
                 blueprint = (blueprint,)
         if isinstance(endpoint, str):
             endpoint = (endpoint,)
+
+        if exclude_blueprint is not _MISSING:
+            if exclude_blueprint is None or isinstance(exclude_blueprint, str):
+                exclude_blueprint = (exclude_blueprint,)
+        if isinstance(exclude_endpoint, str):
+            exclude_endpoint = (exclude_endpoint,)
 
         endpoints = {}
         for rule in app.url_map.iter_rules():
@@ -205,13 +216,22 @@ class Extractor(object):
                     continue
             elif endpoint and rule.endpoint not in endpoint:
                 continue
+            if exclude_blueprint is not _MISSING:
+                rule_blueprint, rule_endpoint = parse_endpoint(rule.endpoint)
+                if rule_blueprint in exclude_blueprint:
+                    continue
+                if exclude_endpoint and rule_endpoint in exclude_endpoint:
+                    continue
+            elif exclude_endpoint and rule.endpoint in exclude_endpoint:
+                continue
             methods = rule.methods.difference({'HEAD', 'OPTIONS'})
             method_collection = endpoints.setdefault(rule.rule, {})
             for method in methods:
                 method_collection[method] = rule.endpoint
         return endpoints
 
-    def extract_paths(self, app: Flask, blueprint=_MISSING, endpoint=None):
+    def extract_paths(self, app: Flask, blueprint=_MISSING, endpoint=None,
+                      exclude_blueprint=_MISSING, exclude_endpoint=None):
         """Extract path items from flask app.
 
         :param blueprint: name of blueprints to be collected. :const:`None`
@@ -220,8 +240,13 @@ class Extractor(object):
         :param endpoint: endpoints to be collected. It cat either be list or
                          string.
 
+        :param exclude_blueprint: blueprints not to be collected.
+
+        :param exclude_endpoint: endpoint not to be collected.
+
         """
-        endpoints = self.collect_endpoints(app, blueprint, endpoint)
+        endpoints = self.collect_endpoints(app, blueprint, endpoint,
+                                           exclude_blueprint, exclude_endpoint)
 
         paths = {}
         for rule, methods in endpoints.items():
