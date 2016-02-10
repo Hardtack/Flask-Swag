@@ -15,3 +15,7 @@ exclude_paths:
   - tests/
   - flask_swag/resources/
   - docs/
+  - README.rst
+  - tox.ini
+  - MANIFEST.in
+  - LICENSE.txt
