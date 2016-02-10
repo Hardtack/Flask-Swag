@@ -16,7 +16,6 @@ TYPE_MAP = {
         'format': 'time',
     },
     datetime.timedelta: {
-        # TODO explore using 'range'?
         'type': 'string',
     },
     datetime.datetime: {
