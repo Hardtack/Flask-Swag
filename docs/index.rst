@@ -14,6 +14,10 @@ Flask-Swag
    :alt: Documentation Status
    :target: http://flask-swag.readthedocs.org/en/latest/?badge=latest
 
+.. image:: https://codeclimate.com/github/Hardtack/Flask-Swag/badges/gpa.svg
+   :target: https://codeclimate.com/github/Hardtack/Flask-Swag
+   :alt: Code Climate
+
 
 Flask-Swag provides utilities for extracting `Swagger <http://swagger.io/>`_
 spec from Flask application.

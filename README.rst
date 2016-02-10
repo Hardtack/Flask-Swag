@@ -18,6 +18,10 @@ It supports only python3.4 and higher.
    :alt: Documentation Status
    :target: http://flask-swag.readthedocs.org/en/latest/?badge=latest
 
+.. image:: https://codeclimate.com/github/Hardtack/Flask-Swag/badges/gpa.svg
+   :target: https://codeclimate.com/github/Hardtack/Flask-Swag
+   :alt: Code Climate
+
 
 How to use it
 -------------
