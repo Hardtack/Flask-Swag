@@ -22,6 +22,10 @@ It supports only python3.4 and higher.
    :target: https://codeclimate.com/github/Hardtack/Flask-Swag
    :alt: Code Climate
 
+.. image:: https://codecov.io/github/Hardtack/Flask-Swag/coverage.svg?branch=master
+   :target: https://codecov.io/github/Hardtack/Flask-Swag?branch=master
+   :alt: Code Coverage
+
 
 How to use it
 -------------
